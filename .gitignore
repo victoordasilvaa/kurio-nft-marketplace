@@ -1,0 +1,26 @@
+# dependências e builds
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# variáveis locais (os arquivos .env.development e .env.production são versionados e não têm segredos)
+.env.local
+.env.*.local
+
+# relatórios de teste e auditoria
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+coverage/
+.lighthouseci/
+lighthouse/reports/
+
+# editores e sistema
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+npm-debug.log*
