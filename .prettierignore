@@ -1,0 +1,13 @@
+# gerados
+src/routeTree.gen.ts
+public/mockServiceWorker.js
+package-lock.json
+
+# builds e relatórios
+dist/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.lighthouseci/
+lighthouse/reports/
