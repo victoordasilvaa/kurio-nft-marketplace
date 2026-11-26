@@ -40,7 +40,13 @@ proibidos. Uma mudança no `eslint.config.js` que abra uma fronteira faz o `npm 
 
 Comentários `eslint-disable` não têm efeito (`noInlineConfig`), `@ts-ignore`, `@ts-expect-error` e
 `any` são proibidos. O `src/routeTree.gen.ts` é gerado pelo plugin do TanStack Router, versionado (o
-`tsc` precisa dele num checkout limpo) e fica fora do lint e do Prettier.
+`tsc` precisa dele num checkout limpo) e fica fora do lint e do Prettier. O `vite.config.ts` troca o
+cabeçalho padrão do gerador (`routeTreeFileHeader`), que traz `/* eslint-disable */` e
+`// @ts-nocheck`, então o `tsc` verifica a árvore gerada.
+
+Exceção explícita: o `as any` em `IndexRouteImport.update({ ... } as any)`. Ele vem do template do
+`@tanstack/router-generator`, num arquivo que não é editado à mão. Só sumiria com `disableTypes`,
+que desliga a tipagem das rotas. É o único `any` do repositório.
 
 ## Inicialização
 
