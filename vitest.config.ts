@@ -2,7 +2,8 @@ import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
-// testes unitários de lógica pura: ambiente node, sem plugins de build
+// testes unitários de lógica pura (src) e das configurações do repositório (tooling):
+// ambiente node, sem plugins de build
 export default defineConfig({
   resolve: {
     alias: {
@@ -11,6 +12,6 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'tooling/**/*.test.ts'],
   },
 });

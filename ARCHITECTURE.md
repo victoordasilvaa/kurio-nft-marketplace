@@ -5,24 +5,42 @@ preenchidas pelas fases seguintes.
 
 ## Camadas e fronteiras
 
-| Pasta                 | Responsabilidade                                                     | Não pode importar                                                                     |
-| --------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `src/main.tsx`        | Inicialização: ambiente, mocks e carregamento do app                 | app de forma estática, socket.io-client, axios, msw                                   |
-| `src/app`             | Composição: router, query client, providers, bootstrap, casca        | `src/mocks`, socket.io-client, axios, msw                                             |
-| `src/routes`          | Rotas de arquivo: ligam caminho, validação de busca, loader e página | `src/mocks`, socket.io-client, axios, msw                                             |
-| `src/features/*`      | Interface e regras de cada funcionalidade                            | `src/app`, `src/routes`, `src/mocks`, clientes de rede                                |
-| `src/shared/api`      | Único ponto de uso do axios (cliente HTTP e contratos REST)          | `src/app`, `src/routes`, `src/features`, `src/mocks`                                  |
-| `src/shared/realtime` | Único ponto de uso do socket.io-client                               | `src/app`, `src/routes`, `src/features`, `src/mocks`                                  |
-| `src/shared/*`        | Configuração, utilitários, domínio puro e componentes compartilhados | `src/app`, `src/routes`, `src/features`, `src/mocks`                                  |
-| `src/components/ui`   | Componentes do shadcn/ui                                             | `src/app`, `src/routes`, `src/features`, `src/mocks`                                  |
-| `src/mocks`           | Backend simulado (MSW): REST, controle e Socket.IO                   | interface (`app`, `routes`, `features`, `components`, `lib`), socket.io-client, axios |
-| `e2e`                 | Testes Playwright                                                    | socket.io-client, axios, msw                                                          |
+| Pasta                 | Responsabilidade                                                     | Não pode importar                                                                                            |
+| --------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/main.tsx`        | Inicialização: ambiente, mocks e carregamento do app                 | de forma estática, tudo além de `src/shared/config` e `src/styles`; socket.io-client, axios, msw             |
+| `src/app`             | Composição: router, query client, providers, bootstrap, casca        | `src/mocks`, socket.io-client, axios, msw                                                                    |
+| `src/routes`          | Rotas de arquivo: ligam caminho, validação de busca, loader e página | `src/mocks`, socket.io-client, axios, msw                                                                    |
+| `src/features/*`      | Interface e regras de cada funcionalidade                            | `src/app`, `src/routes`, `src/mocks`, clientes de rede                                                       |
+| `src/shared/api`      | Único ponto de uso do axios (cliente HTTP e contratos REST)          | `src/app`, `src/routes`, `src/features`, `src/mocks`                                                         |
+| `src/shared/realtime` | Único ponto de uso do socket.io-client                               | `src/app`, `src/routes`, `src/features`, `src/mocks`                                                         |
+| `src/shared/*`        | Configuração, utilitários, domínio puro e componentes compartilhados | `src/app`, `src/routes`, `src/features`, `src/mocks`                                                         |
+| `src/components/ui`   | Componentes do shadcn/ui                                             | `src/app`, `src/routes`, `src/features`, `src/mocks`                                                         |
+| `src/mocks`           | Backend simulado (MSW): REST, controle e Socket.IO                   | interface (`app`, `routes`, `features`, `components`, `lib`), socket.io-client, axios, cliente de tempo real |
+| `e2e`                 | Testes Playwright                                                    | socket.io-client, axios, msw                                                                                 |
 
-As regras estão em `eslint.config.js` (`kurio/boundaries/*`) e valem para import estático e
-dinâmico. Comentários `eslint-disable` não têm efeito (`noInlineConfig`), `@ts-ignore`,
-`@ts-expect-error` e `any` são proibidos. O `src/routeTree.gen.ts` é gerado pelo plugin do
-TanStack Router, versionado (o `tsc` precisa dele num checkout limpo) e fica fora do lint e do
-Prettier.
+As regras estão em `eslint.config.js` (`kurio/boundaries/*`). Cada fronteira é uma expressão regular
+sobre o especificador e vale:
+
+- para import estático (inclusive `import type` e reexportação) e para import dinâmico;
+- pelo alias (`@/app`) e pelo caminho relativo que sobe de pasta (`../../app`). Por isso, pastas
+  internas de uma camada não usam os nomes das camadas (`app`, `routes`, `features`, `components`,
+  `lib`, `mocks`).
+
+Detalhes das regras:
+
+- Import dinâmico só aceita string literal. Template literal, concatenação e `import.meta.glob` são
+  barrados, porque a fronteira só pode ser verificada num especificador conhecido.
+- A regra da entrada é a única que vale só para import estático, porque `src/main.tsx` carrega mocks
+  e app por import dinâmico (ver Inicialização).
+- O cliente de tempo real, que o backend simulado não importa, é tudo de `src/shared/realtime`
+  exceto `contract` e `events`.
+
+`tooling/eslint-boundaries.test.ts` verifica cada região com trechos de código permitidos e
+proibidos. Uma mudança no `eslint.config.js` que abra uma fronteira faz o `npm test` falhar.
+
+Comentários `eslint-disable` não têm efeito (`noInlineConfig`), `@ts-ignore`, `@ts-expect-error` e
+`any` são proibidos. O `src/routeTree.gen.ts` é gerado pelo plugin do TanStack Router, versionado (o
+`tsc` precisa dele num checkout limpo) e fica fora do lint e do Prettier.
 
 ## Inicialização
 
@@ -39,6 +57,13 @@ avaliado, e o MSW só troca o WebSocket global dentro de `worker.start()`. Um im
 um controle negativo: com o import estático, a conexão vai para a rede
 (`ERR_NAME_NOT_RESOLVED`) e o smoke E2E de tempo real falha. No build, o transporte WebSocket do
 cliente fica só no chunk do bootstrap; o chunk de entrada não contém MSW nem socket.io-client.
+
+A ordem é protegida de duas formas:
+
+- lint: `src/main.tsx` só importa de forma estática `src/shared/config` e `src/styles`, e
+  `src/mocks` não importa o cliente de tempo real, que avaliaria o `engine.io-client` antes do
+  `worker.start()`;
+- smoke E2E de tempo real: cobre também o caminho transitivo, que o lint não enxerga.
 
 Falha na inicialização (ambiente inválido, erro ao registrar o service worker) aparece na página
 num `role="alert"` e no console; não há modo degradado silencioso.
@@ -124,6 +149,8 @@ os contratos REST.
 - Unitários (Vitest, ambiente node): validação do ambiente, store observável, protocolo
   Socket.IO (leitura do CONNECT e CONNECT_ERROR), barramento, entrega e validação de eventos e
   contrato da API de controle.
+- Configurações (Vitest, `tooling/`): fronteiras de importação do ESLint, verificadas com trechos de
+  código por região.
 - E2E (Playwright): sempre contra o build de produção servido pelo `vite preview`. Os testes abrem
   o app e esperam a renderização (que só acontece depois do `worker.start()`) antes de usar a API
   de controle; chamadas de controle saem de dentro da página para passar pelo service worker. Uma

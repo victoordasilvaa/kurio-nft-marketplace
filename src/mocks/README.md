@@ -26,5 +26,7 @@ Para acrescentar:
   fora do catálogo ou fora do schema lança erro.
 
 Regras: pode importar `src/shared` (contratos e configuração); não importa interface (`app`,
-`routes`, `features`, `components`, `lib`), `axios` nem `socket.io-client`. Nunca use `delay()` sem
-argumento (é aleatório): latências precisam ser determinísticas.
+`routes`, `features`, `components`, `lib`), `axios` nem `socket.io-client`. De `src/shared/realtime`,
+só `contract` e `events`: o cliente (`socket.ts` e o provider) avaliaria o `engine.io-client` antes
+do `worker.start()`. Nunca use `delay()` sem argumento (é aleatório): latências precisam ser
+determinísticas.

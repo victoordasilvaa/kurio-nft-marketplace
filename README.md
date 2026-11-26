@@ -34,7 +34,7 @@ depois de atualizar o `msw`, gere o arquivo de novo com `npm run mocks:init`.
 | `npm run lint:fix`        | ESLint com correções automáticas.                                           |
 | `npm run format`          | Formata o repositório com Prettier.                                         |
 | `npm run format:check`    | Confere a formatação sem alterar arquivos.                                  |
-| `npm test`                | Testes unitários (Vitest, ambiente node).                                   |
+| `npm test`                | Testes unitários e das configurações (Vitest, ambiente node).               |
 | `npm run test:watch`      | Testes unitários em modo observação.                                        |
 | `npm run test:e2e`        | Testes E2E (Playwright) contra o build de produção servido pelo preview.    |
 | `npm run test:e2e:ui`     | Testes E2E no modo interativo do Playwright.                                |
@@ -97,11 +97,14 @@ src/
   mocks/            backend simulado (MSW): REST, API de controle e servidor Socket.IO
   styles/           CSS global e tema do Tailwind
 e2e/                testes Playwright e utilitários de teste
+tooling/            testes das configurações do repositório (fronteiras do ESLint)
 ```
 
 As fronteiras entre camadas são verificadas pelo ESLint (regras `kurio/boundaries/*` em
-`eslint.config.js`): `socket.io-client` só em `src/shared/realtime`, `axios` só em
-`src/shared/api` e `src/mocks` só em `src/main.tsx`, `src/mocks` e `e2e`.
+`eslint.config.js`, com casos em `tooling/eslint-boundaries.test.ts`): `socket.io-client` só em
+`src/shared/realtime`, `axios` só em `src/shared/api` e `src/mocks` só em `src/main.tsx`,
+`src/mocks` e `e2e`. Valem para import estático e dinâmico (só com string literal), pelo alias e por
+caminho relativo.
 
 ## CI e deploy
 
