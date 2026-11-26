@@ -175,6 +175,35 @@ os contratos REST.
 - Regressão visual: o caminho das baselines não tem `{platform}` porque elas serão geradas só em
   Linux (imagem oficial do Playwright). Pendente: projetos visuais e baselines.
 
+## Dependências além da lista aprovada
+
+O `package.json` segue o conjunto de versões exatas aprovado na fundação. Os desvios estão abaixo,
+cada um com problema, motivo, alternativa e impacto.
+
+### `socket.io-parser` 4.2.7 como dependência direta
+
+- Problema: o servidor simulado precisa do `auth` do pacote CONNECT do Socket.IO para aceitar o
+  visitante, recusar token não reconhecido (CONNECT_ERROR) e registrar o usuário da conexão. O
+  `@mswjs/socket.io-binding` 0.2.0 só repassa pacotes EVENT (descarta os demais no decoder) e não
+  expõe o CONNECT.
+- Por que: é o decoder oficial do protocolo, na mesma versão que o `socket.io-client` 4.8.4 e o
+  binding já instalam. Usar o pacote sem declará-lo dependeria do hoisting do npm.
+- Alternativa: parse manual do frame `40{json}` (namespace opcional, `auth` em JSON, pacotes com
+  anexos binários), frágil diante de variações do protocolo.
+- Impacto:
+  - nenhum pacote novo: o lockfile tem uma única `socket.io-parser@4.2.7`, deduplicada sob o
+    `socket.io-client` e o binding;
+  - nenhum byte novo no bundle: o código do parser já fica no chunk compartilhado com o
+    `socket.io-client`;
+  - o import é restrito a `src/mocks` pelo ESLint (grupo `mockLibraries`), e o uso fica em
+    `src/mocks/realtime/protocol.ts`.
+
+### `msw` e `@mswjs/socket.io-binding` em `dependencies`
+
+A lista aprovada os coloca em `devDependencies`. Eles estão em `dependencies` porque fazem parte do
+build de demonstração: o `.env.production` liga o backend simulado, e o chunk de mocks (MSW e
+binding) é publicado com o app. As versões são as da lista (2.15.0 e 0.2.0).
+
 ## Pendências de documentação
 
 Contratos REST e de eventos, política de sessão, estado do carrinho, estratégia de cache,
