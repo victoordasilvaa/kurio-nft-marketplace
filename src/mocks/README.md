@@ -7,6 +7,7 @@ Backend simulado com MSW, carregado só quando `VITE_ENABLE_MOCKS=true` e sempre
 | Arquivo                | Papel                                                              |
 | ---------------------- | ------------------------------------------------------------------ |
 | `browser.ts`           | `setupWorker` e `startMockServiceWorker()`                         |
+| `unhandled-request.ts` | Escopo do backend: chamada sem handler falha, nunca vai à rede     |
 | `runtime.ts`           | Instâncias do backend (estado, barramento, servidor de tempo real) |
 | `state.ts`             | Estado do backend; hoje só o cenário ativo                         |
 | `handlers/index.ts`    | Agrega todos os handlers                                           |

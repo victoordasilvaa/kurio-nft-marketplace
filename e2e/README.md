@@ -4,13 +4,14 @@ Testes Playwright contra o build de produção com o backend simulado. Configura
 `playwright.config.ts`; comandos no `README.md` da raiz.
 
 - `support/fixtures.ts`: `test` e `expect` do projeto. Todo teste falha em exceção não tratada na
-  página ou em `console.error` não declarado; use `consoleGuard.allow(/padrão/)` quando o teste
-  provoca um erro de propósito (por exemplo, uma resposta 4xx).
+  página, em `console.error` ou em aviso do MSW (`[MSW] ...`) não declarados; use
+  `consoleGuard.allow(/padrão/)` quando o teste provoca um erro de propósito (por exemplo, uma
+  resposta 4xx).
 - `support/app.ts`: `openApp` (navega e espera o app renderizar, o que só acontece depois do
   `worker.start()`), `fetchFromPage` (requisição feita de dentro da página, para passar pelo
   service worker do MSW), `readMockState` e `controllingServiceWorker`.
 - `smoke.spec.ts`: smoke do bootstrap (título, MSW, conexão Socket.IO, heartbeat, 404, refresh em
-  rota profunda e API de controle).
+  rota profunda, API de controle e chamada sem handler, que falha em vez de seguir para a rede).
 
 Regras: interaja pela interface e verifique o resultado na interface; use a API de controle
 (`/__mock/*`) só para preparar o cenário ou observar o servidor simulado. Não use `page.route` para

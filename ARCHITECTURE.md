@@ -77,9 +77,19 @@ desligados por variável de processo, o chunk de mocks continua no build, mas n�
 ## Backend simulado (MSW)
 
 - `src/mocks/browser.ts`: `setupWorker` com todos os handlers; o worker é registrado por caminho
-  absoluto (`/mockServiceWorker.js`), então funciona em qualquer rota profunda. Requisições sem
-  handler: assets estáticos seguem para a rede sem aviso; chamadas para a base da API ou para
-  `/__mock/*` geram aviso no console. `quiet` em produção.
+  absoluto (`/mockServiceWorker.js`), então funciona em qualquer rota profunda. `quiet` em produção.
+- Requisições sem handler (`src/mocks/unhandled-request.ts` decide o escopo):
+  - assets estáticos e módulos do servidor do Vite seguem para a rede sem aviso;
+  - chamadas para a base da API ou para `/__mock/*` falham: o MSW registra `console.error` e
+    responde 500 (`Request Handler Error`) com a mensagem
+    `Requisição sem handler no backend simulado: <método> <caminho>`. Elas nunca seguem para a
+    rede, onde o fallback de SPA (preview e Vercel) responderia o `index.html` com status 200.
+
+  No msw 2.15, o `print.error()` do callback `onUnhandledRequest` só imprime (`on-unhandled-frame`:
+  "The defaults only print"). Quem interrompe a requisição é a exceção lançada no callback, que o
+  MSW converte na resposta 500. O controle negativo, só com `print.error()`, recebeu 200 com o
+  `index.html`. O smoke E2E cobre `/api` e `/__mock`.
+
 - `src/mocks/handlers/`: `GET {API}/health` e a API de controle.
 - `src/mocks/control/contract.ts`: contrato zod da API de controle (estado, reset e erro), também
   usado pelos testes E2E.
@@ -154,7 +164,8 @@ os contratos REST.
 - E2E (Playwright): sempre contra o build de produção servido pelo `vite preview`. Os testes abrem
   o app e esperam a renderização (que só acontece depois do `worker.start()`) antes de usar a API
   de controle; chamadas de controle saem de dentro da página para passar pelo service worker. Uma
-  fixture falha o teste em exceção não tratada ou `console.error` não declarado pelo teste.
+  fixture falha o teste em exceção não tratada, `console.error` ou aviso do MSW não declarados pelo
+  teste (no build de produção o MSW roda em modo quiet e não emite outros avisos).
 - Regressão visual: o caminho das baselines não tem `{platform}` porque elas serão geradas só em
   Linux (imagem oficial do Playwright). Pendente: projetos visuais e baselines.
 

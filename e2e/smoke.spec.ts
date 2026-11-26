@@ -10,6 +10,8 @@ import { controllingServiceWorker, fetchFromPage, openApp, readMockState } from 
 const MSW_WORKER_SCRIPT = /\/mockServiceWorker\.js$/;
 // URL do handshake do Engine.IO v4 (transporte WebSocket) na origem de tempo real configurada
 const REALTIME_HANDSHAKE_URL = 'wss://realtime.kurio.test/socket.io/?EIO=4&transport=websocket';
+const MSW_UNHANDLED_REQUEST_ERROR =
+  /^\[MSW\] Error: intercepted a request without a matching request handler/;
 
 test.describe('smoke do bootstrap', () => {
   test('a home carrega com o título', async ({ page }) => {
@@ -126,5 +128,42 @@ test.describe('smoke do bootstrap', () => {
     expect(invalid.status).toBe(422);
     const { issues } = mockControlErrorSchema.parse(invalid.body);
     expect(issues.some((issue) => issue.startsWith('scenario:'))).toBe(true);
+  });
+
+  test('chamada ao backend simulado sem handler falha em vez de seguir para a rede', async ({
+    page,
+    consoleGuard,
+  }) => {
+    // provocados de propósito: o erro do MSW (verificado abaixo), o aviso do MSW sobre a resposta
+    // 500 que ele gerou e o 500 registrado pelo Chromium
+    consoleGuard.allow(MSW_UNHANDLED_REQUEST_ERROR);
+    consoleGuard.allow(/^\[MSW\] Uncaught exception in the request handler for "GET /);
+    consoleGuard.allow(/status of 500 \(Request Handler Error\)/);
+    const mswErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error' && MSW_UNHANDLED_REQUEST_ERROR.test(message.text())) {
+        mswErrors.push(message.text());
+      }
+    });
+    await openApp(page);
+
+    const paths = ['/api/rota-sem-handler', `${MOCK_CONTROL_BASE_PATH}/rota-sem-handler`];
+    for (const path of paths) {
+      const networkResponse = page.waitForResponse(
+        (response) => new URL(response.url()).pathname === path,
+      );
+      const response = await fetchFromPage(page, path);
+
+      // sem a interrupção, o fallback de SPA do servidor responderia 200 com o index.html
+      expect(response.status).toBe(500);
+      expect(response.body).toMatchObject({
+        message: `Requisição sem handler no backend simulado: GET ${path}`,
+      });
+      expect((await networkResponse).fromServiceWorker()).toBe(true);
+    }
+    // o erro do MSW cita cada chamada, na ordem em que foram feitas
+    await expect
+      .poll(() => mswErrors.map((text) => paths.find((path) => text.includes(`GET ${path}`))))
+      .toEqual(paths);
   });
 });
