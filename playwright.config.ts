@@ -18,8 +18,11 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   workers: isCI ? 1 : undefined,
   reporter: [['html', { open: 'never', outputFolder: 'playwright-report' }], ['list']],
-  // Baselines visuais versionadas, geradas só em Linux (imagem oficial do Playwright no CI):
-  // sem {platform} no caminho, um único arquivo por projeto e tela.
+  // Baselines visuais versionadas, geradas só em Linux: sem {platform} no caminho, um único arquivo
+  // por projeto e tela. Os projetos visuais rodam só na imagem oficial
+  // mcr.microsoft.com/playwright:v1.65.0-noble, de tag igual à versão do @playwright/test: com
+  // outra tag, o Playwright não encontra os navegadores da imagem
+  // (conferido em tooling/playwright-image.test.ts).
   snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',
   use: {
     baseURL,

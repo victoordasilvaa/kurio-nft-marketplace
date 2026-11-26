@@ -166,14 +166,18 @@ os contratos REST.
   Socket.IO (leitura do CONNECT e CONNECT_ERROR), barramento, entrega e validação de eventos e
   contrato da API de controle.
 - Configurações (Vitest, `tooling/`): fronteiras de importação do ESLint, verificadas com trechos de
-  código por região.
+  código por região, e tag da imagem do Playwright igual à versão instalada.
 - E2E (Playwright): sempre contra o build de produção servido pelo `vite preview`. Os testes abrem
   o app e esperam a renderização (que só acontece depois do `worker.start()`) antes de usar a API
   de controle; chamadas de controle saem de dentro da página para passar pelo service worker. Uma
   fixture falha o teste em exceção não tratada, `console.error` ou aviso do MSW não declarados pelo
   teste (no build de produção o MSW roda em modo quiet e não emite outros avisos).
 - Regressão visual: o caminho das baselines não tem `{platform}` porque elas serão geradas só em
-  Linux (imagem oficial do Playwright). Pendente: projetos visuais e baselines.
+  Linux, na imagem oficial `mcr.microsoft.com/playwright:v1.65.0-noble`. A tag acompanha a versão
+  exata do `@playwright/test` (1.65.0); com outra tag, como a v1.65.1, o Playwright não encontra os
+  navegadores da imagem. Os projetos visuais ficam restritos a essa imagem, e
+  `tooling/playwright-image.test.ts` reprova qualquer referência à imagem com outra versão.
+  Pendente: job visual, projetos visuais e baselines.
 
 ## Dependências além da lista aprovada
 
