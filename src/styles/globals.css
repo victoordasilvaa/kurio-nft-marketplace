@@ -1,6 +1,11 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source('../');
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+
+/* Classes só da interface: a detecção parte de src e ignora o backend simulado e os testes, para
+   que texto de teste, documentação ou CI não gere CSS de produção. */
+@source not '../mocks';
+@source not '../**/*.test.ts';
 
 @custom-variant dark (&:is(.dark *));
 
