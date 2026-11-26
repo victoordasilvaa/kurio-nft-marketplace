@@ -9,7 +9,8 @@ backend simulado na camada de rede (MSW) e tempo real via Socket.IO simulado.
 
 ## Requisitos
 
-- Node.js 24.x (`.nvmrc`; verificado com 24.22.1) e npm 11 (verificado com 11.19.1).
+- Node.js 24.22.1 (fixado no `.nvmrc`, que o CI usa; `engines` aceita 24.x) e npm 11 (verificado
+  com 11.19.1).
 - Chromium do Playwright 1.65.0 para os testes E2E (`npx playwright install chromium`, se ainda não
   estiver instalado na máquina).
 
@@ -108,8 +109,10 @@ caminho relativo.
 
 ## CI e deploy
 
-- CI (`.github/workflows/ci.yml`, em push e pull request): `npm ci`, tipos, lint, testes unitários,
-  build e E2E em desktop e mobile, com relatório e resultados publicados como artefatos.
+- CI (`.github/workflows/ci.yml`, em push e pull request): Node do `.nvmrc`, `npm ci`, tipos, lint,
+  formatação, testes unitários e das configurações, e E2E em desktop e mobile, com relatório e
+  resultados publicados como artefatos. O build de produção roda uma vez, no `webServer` do
+  Playwright, antes do preview.
 - Vercel (`vercel.json`): fallback de SPA para `index.html`, `no-cache` para o
   `mockServiceWorker.js` e cache imutável para `/assets`. O deploy público ainda não foi feito.
 

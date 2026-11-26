@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Tipos, lint, testes, build e E2E
+    name: Tipos, lint, formatação, testes, build e E2E
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Node 24 com cache do npm
+      - name: Node do .nvmrc com cache do npm
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -37,16 +37,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Testes unitários
-        run: npm test
+      - name: Formatação
+        run: npm run format:check
 
-      - name: Build
-        run: npm run build
+      - name: Testes unitários e das configurações
+        run: npm test
 
       - name: Instalar o Chromium do Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Testes E2E (desktop e mobile)
+      # build único: o webServer do playwright.config.ts faz npm run build (tsc -b e vite build)
+      # antes do preview, então uma falha de build aparece neste passo
+      - name: Build de produção e testes E2E (desktop e mobile)
         run: npm run test:e2e -- --project=chromium-desktop --project=chromium-mobile
 
       - name: Publicar relatório HTML do Playwright
