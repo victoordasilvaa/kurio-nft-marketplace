@@ -17,7 +17,8 @@
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix --max-warnings=0",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "mocks:init": "msw init public --save"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -72,5 +73,10 @@
     "eslint-plugin-jsx-a11y": {
       "eslint": "$eslint"
     }
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

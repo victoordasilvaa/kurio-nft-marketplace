@@ -2,9 +2,16 @@ import './styles/globals.css';
 
 import { getEnv } from '@/shared/config/env';
 
+// Ordem obrigatória: o backend simulado começa antes de qualquer módulo do app ser avaliado.
+// O engine.io-client guarda globalThis.WebSocket quando o módulo é carregado; se o
+// socket.io-client fosse avaliado antes do worker.start(), o WebSocket não seria interceptado.
+// Por isso este arquivo não importa o app de forma estática.
 async function start(container: HTMLElement): Promise<void> {
-  // valida a configuração antes de carregar qualquer outra parte da aplicação
-  getEnv();
+  const env = getEnv();
+  if (env.enableMocks) {
+    const { startMockServiceWorker } = await import('./mocks/browser');
+    await startMockServiceWorker();
+  }
   const { renderApp } = await import('./app/bootstrap');
   renderApp(container);
 }
